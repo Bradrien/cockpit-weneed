@@ -2,10 +2,20 @@
 import json, ssl, os, threading, datetime as dt, urllib.request
 from flask import Flask, jsonify
 
-ODOO_URL = "https://weneedweed.odoo.com"
-DB, UID, PASSWORD = "weneedweed", 13, "!Gotierdu31500"
+ODOO_URL = os.environ.get("ODOO_URL", "").strip().rstrip("/")
+DB = os.environ.get("ODOO_DB", "").strip()
+uid_text = os.environ.get("ODOO_UID", "").strip()
+PASSWORD = os.environ.get("ODOO_PASSWORD", "")
+if not ODOO_URL.startswith("https://") or not DB or not uid_text or not PASSWORD:
+    raise RuntimeError("Missing valid ODOO_URL (HTTPS), ODOO_DB, ODOO_UID or ODOO_PASSWORD configuration")
+try:
+    UID = int(uid_text)
+except ValueError:
+    raise RuntimeError("ODOO_UID must be a positive integer") from None
+if UID <= 0:
+    raise RuntimeError("ODOO_UID must be a positive integer")
 PORT = int(os.environ.get("PORT", 5001))
-_ctx = ssl._create_unverified_context()
+_ctx = ssl.create_default_context()
 
 OH_A, OH_B = 0.25, 0.15
 A_K1, A_K2 = 0.15, 0.80
